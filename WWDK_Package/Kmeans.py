@@ -14,13 +14,14 @@ import csv
 from numba import njit, jit
 from sklearn.base import BaseEstimator, ClusterMixin, TransformerMixin
 class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):               # Input: processed dataset, Output: clustered data (kmeans, kmeans++)
-    def __init__(self, inits=10, k=8, maxit=300):
+    def __init__(self, inits=10, k=8, maxit=300, method="++"):
         
         self.labels_ = None
         self.cluster_centers_ = None
         self._inits = inits
         self._k = k
         self._maxit = maxit
+        self._method = method
        # dot = np.random.choice(range(len(self._data)), self._k, replace=False)
         #self._clusters = self._data[dot]
    
@@ -30,8 +31,35 @@ class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):               # Inp
         best_clust = float('inf')
         
         for i in (range(self._inits)):
-            dot = np.random.choice(range(len(self._data)), self._k, replace=False)
-            self.cluster_centers_ = self._data[dot]
+            
+            if self._method == "rng": # random centers are choosen
+                #print("rng")
+                dot = np.random.choice(range(len(self._data)), self._k, replace=False)
+                self.cluster_centers_ = self._data[dot]
+            elif self._method == "++": # kmeans++ is initiated
+                #print("++")
+                dot = np.random.choice(len(self._data), replace=False) # random startpunkt
+                clusters = np.array([self._data[dot]])
+                pointer = np.array([])
+                for i in range (self._k-1):
+                    D = np.array([])
+            
+                    for j in range (len(self._data)):
+                        D = np.append(D,np.min(np.sum((self._data[j]-clusters)**2, axis = 1)))
+                
+                    pointer = np.append(pointer, D, axis = 0) 
+            
+                    p = D/np.sum(D)
+                    cummulative_p = np.cumsum(p)
+            
+                    r = random.random()
+                    ind = np.where(cummulative_p >= r)[0][0]
+            
+                    clusters = np.append(clusters,[self._data[ind]], axis = 0)
+                self.cluster_centers_ = clusters
+            else:
+                raise AttributeError("No valid method")
+            
             for i in range(self._maxit):
                 clusters = np.expand_dims(self.cluster_centers_, axis=1)
                 data = np.expand_dims(self._data, axis=0)
