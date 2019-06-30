@@ -24,6 +24,7 @@ class MiniBatchKMeans:
             inits (int): number of independent initializations to perform.
             max_iterations (int): maximum number of iterations to perform.
             tol (float): tolerance for early stopping.
+            batch_size (int): number of datapoints for the minibatch.
         """
         self._k = k
         self._inits = inits
@@ -31,19 +32,28 @@ class MiniBatchKMeans:
         self._tol = tol
         self._batch_size = batch_size
         
-    def create_batch(self, data): #wählt ein random batch aus den Daten aus
+    def create_batch(self, data): 
         data_batch = np.random.choice(range(len(data)), self._batch_size, replace=False)
         return data[data_batch]
         
-    def initialize(self, data): #setzt zufällig centroids aus den Daten
+        """chooses x (x = batch_size) random points from the data to create the data batch
+        """
+        
+    def initialize(self, data): 
         indices = np.random.choice(range(len(data)), self._k, replace=False)
         return data[indices], np.zeros(self._k)
+        
+        """chooses k random data points from data, to set centers for clustering
+        """
     
-    def expectation(self, data, centroids): #ordnet den centroids die Punkte zu
+    def expectation(self, data, centroids): 
         centroids = np.expand_dims(centroids, axis=1)
         data = np.expand_dims(data, axis=0)
         metric = np.linalg.norm(centroids - data, axis=2)
         return np.argmin(metric, axis=0)
+        
+        """measures the euclidean distance between each data_batch points and center points using numpys linalg.norm function
+        """
     
     @staticmethod
     @numba.jit(nopython=True)
@@ -56,8 +66,14 @@ class MiniBatchKMeans:
             update[assignment] = update[assignment] * (1 - lr) + data_point * lr
         return update
     
+        """Moves the centroids to the new centroid point of the assigned data_batch points. But not completely, but according to the learning rate
+        """
+    
     def maximization(self, data, assignments, centroids, centroid_count): 
         return MiniBatchKMeans._maximization_aux(data, assignments, centroids, centroid_count)
+    
+        """This part applies maximization_aux on the data using maximization_aux
+        """
     
     def final_assignments(self, data, centroids): 
         assignments = []
@@ -67,6 +83,9 @@ class MiniBatchKMeans:
             sub_result = self.expectation(data[start:stop], centroids)
             assignments.append(sub_result)
         return np.concatenate(assignments, axis=0)
+    
+        """Assignes the rest of the data points to the centroids, which were determined before (not only batch_points)
+        """
     
     def fit(self, data): #alles zusammen
         centroids, counts = self.initialize(data)
