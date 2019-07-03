@@ -12,7 +12,7 @@ import csv
 from numba import njit, jit
 from sklearn.base import BaseEstimator, ClusterMixin, TransformerMixin
 
-class DataLoader(): # Input:dData, Output: processed dataset ready for kmeans
+class Loader(): # Input:dData, Output: processed dataset ready for kmeans
     
     """Encapsulates data for clustering."""
     def __init__(self, page):
@@ -23,31 +23,31 @@ class DataLoader(): # Input:dData, Output: processed dataset ready for kmeans
     def url_extract(): #extracts the data from url
         pass
     
-    def strip(): # Data preprocessing
+    def process(): # Data preprocessing
         pass
-    def pca(self): # Principal component analysis
+    def _pca(self): # Principal component analysis
         #scaled = preprocessing.scale(self._data)
         pca = PCA()
         return pca.fit_transform(self.data)
         #per_var = np.round(pca.explained_variance_ratio_*100, decimals= 1)
         #pca_data = pca.transform(self-_data)
         #labels = ["PC" + str(x) for x in range(1,len(per_var)+1)]
-    def t_sne(): #t-distributed stochastic neighbor embedding
+    def _t_sne(): #t-distributed stochastic neighbor embedding
         pass
     def to_matrix(self):                                # converts to scanpy matrix 
         return self.matrix
         
-    def to_array(self):                              # converts data to numpy arrays
+    def _to_array(self):                              # converts data to numpy arrays
         self.matrix.var_names_make_unique()
         ar_data = self.matrix._X.todense().getA()
         return ar_data
     
-    def to_df(self):                                 # converts data to pandas dataframe
+    def _to_df(self):                                 # converts data to pandas dataframe
         self.data = self.matrix.to_df()
 
         return self.data
         
-    def col_names(self):                              #returns column names as a list
+    def _col_names(self):                              #returns column names as a list
         columns = []
         with open(self.source + "genes.tsv") as file:
             reader = csv.reader(file, delimiter='\t')
@@ -55,7 +55,7 @@ class DataLoader(): # Input:dData, Output: processed dataset ready for kmeans
                 columns.append(row[1])
             return columns
 
-    def row_names(self):                               #returns row names as a list
+    def _row_names(self):                               #returns row names as a list
         rows = []
         with open(self.source + "barcodes.tsv") as file:
             reader = csv.reader(file, delimiter='\t')
