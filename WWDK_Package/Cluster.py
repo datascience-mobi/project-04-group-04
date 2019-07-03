@@ -11,7 +11,7 @@ from sklearn.datasets.samples_generator import make_blobs
 from sklearn.base import BaseEstimator, ClusterMixin, TransformerMixin
 
 class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):               # Input: processed dataset, Output: clustered data (kmeans, kmeans++)
-    def __init__(self, inits=10, k=8, maxit=300, method="++"):
+    def __init__(self, inits=10, k=8, maxit=300, method="++", tol = 1e-3):
         
         self.labels_ = None
         self.cluster_centers_ = None
@@ -19,6 +19,7 @@ class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):               # Inp
         self._k = k
         self._maxit = maxit
         self._method = method
+        self._tol = tol
        # dot = np.random.choice(range(len(self._data)), self._k, replace=False)
         #self._clusters = self._data[dot]
    
@@ -56,8 +57,11 @@ class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):               # Inp
                 self.cluster_centers_ = clusters
             else:
                 raise AttributeError("No valid method")
+
+            old_centroids = None
             
             for i in range(self._maxit):
+                old_centroids = self.cluster_centers_.copy()
                 clusters = np.expand_dims(self.cluster_centers_, axis=1)
                 data = np.expand_dims(self._data, axis=0)
                 eucl = np.linalg.norm(clusters-data, axis=2) # euclidean dist by using integrated numpy function
@@ -71,6 +75,8 @@ class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):               # Inp
                     best_clust = overall_quality
                     best_dist = self.labels_
                     best_centers = self.cluster_centers_
+                if np.linalg.norm(best_centers - old_centroids) < self._tol:
+                    break
             self.cluster_centers_ = best_centers
             self.labels_ = best_dist
                 
