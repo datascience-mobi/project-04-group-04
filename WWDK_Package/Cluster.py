@@ -38,14 +38,14 @@ class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):               # Inp
                 #print("++")
                 dot = np.random.choice(len(self._data), replace=False) # random startpunkt
                 clusters = np.array([self._data[dot]])
-                pointer = np.array([])
+                
                 for i in range (self._k-1):
                     D = np.array([])
             
                     for j in range (len(self._data)):
                         D = np.append(D,np.min(np.sum((self._data[j]-clusters)**2, axis = 1)))
                 
-                    pointer = np.append(pointer, D, axis = 0) 
+                     
             
                     p = D/np.sum(D)
                     cummulative_p = np.cumsum(p)
@@ -59,7 +59,7 @@ class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):               # Inp
                 raise AttributeError("No valid method")
 
             old_centroids = None
-            
+
             for i in range(self._maxit):
                 old_centroids = self.cluster_centers_.copy()
                 clusters = np.expand_dims(self.cluster_centers_, axis=1)
@@ -75,10 +75,11 @@ class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):               # Inp
                     best_clust = overall_quality
                     best_dist = self.labels_
                     best_centers = self.cluster_centers_
-                if np.linalg.norm(best_centers - old_centroids) < self._tol:
+                if np.linalg.norm(self.cluster_centers_ - old_centroids) < self._tol:
                     break
             self.cluster_centers_ = best_centers
             self.labels_ = best_dist
+            self.inertia_ = best_clust
                 
         return self
    
@@ -98,7 +99,7 @@ class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):               # Inp
 
 class MiniBatchKMeans(BaseEstimator, ClusterMixin, TransformerMixin):
     """Performs mini-batch k-means on a set of input data."""
-    def __init__(self, k=8, inits=300, max_iterations=300, tol=1e-3, batch_size=128):
+    def __init__(self, k=8, inits=300, max_iterations=300, tol=1e-3, batch_size=100, method = "++"):
         """Simple mini-batch k-means clustering implementation in pure Python.
         
         Args:
@@ -115,10 +116,31 @@ class MiniBatchKMeans(BaseEstimator, ClusterMixin, TransformerMixin):
         self._max_iterations = max_iterations
         self._tol = tol
         self._batch_size = batch_size
+        self._method = method
         
     def create_batch(self, data): 
-        data_batch = np.random.choice(range(len(data)), self._batch_size, replace=False)
-        return data[data_batch]
+        if self._method == "rng":
+
+            data_batch = np.random.choice(range(len(data)), self._batch_size, replace=False)
+            return data[data_batch]
+        elif self._method == "++":
+            batch = np.random.choice(len(data), replace=False) # random startpunkt
+            clusters = np.array([data[batch]])
+                
+            for i in range (self._k-1):
+                D = np.array([])
+            
+                for j in range (len(data)):
+                    D = np.append(D,np.min(np.sum((data[j]-clusters)**2, axis = 1)))
+            
+                p = D/np.sum(D)
+                cummulative_p = np.cumsum(p)
+            
+                r = random.random()
+                ind = np.where(cummulative_p >= r)[0][0]
+            
+                clusters = np.append(clusters,[data[ind]], axis = 0)
+            return clusters
         
         """chooses x (x = batch_size) random points from the data to create the data batch
         """
