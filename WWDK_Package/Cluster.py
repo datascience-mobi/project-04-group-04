@@ -10,8 +10,18 @@ from statistics import mean
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.base import BaseEstimator, ClusterMixin, TransformerMixin
 
-class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):               # Input: processed dataset, Output: clustered data (kmeans, kmeans++)
+class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):               
+    """Performs native k-means on a set of input data """
     def __init__(self, inits=10, k=8, maxit=300, method="++", tol = 1e-3):
+        """Simple k-means clustering implementation in pure Python.
+        
+        Args:
+            k (int): number of clusters to fit.
+            inits (int): number of independent initializations to perform.
+            max_iterations (int): maximum number of iterations to perform.
+            method (str): method of choosing starting centers "++" or "rng"
+            tol (float): tolerance for early stopping.
+        """
         
         self.labels_ = None
         self.cluster_centers_ = None
@@ -20,22 +30,21 @@ class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):               # Inp
         self._maxit = maxit
         self._method = method
         self._tol = tol
-       # dot = np.random.choice(range(len(self._data)), self._k, replace=False)
-        #self._clusters = self._data[dot]
-   
+       
+    """fits given data and calculates cluster centers and labels points accordingly"""
 
     def fit(self,data):
         self._data = data
         best_clust = float('inf')
         
         for i in (range(self._inits)):
-            
+            """random points from the dataset are selected as starting centers """
             if self._method == "rng": # random centers are choosen
-                #print("rng")
+                
                 dot = np.random.choice(range(len(self._data)), self._k, replace=False)
                 self.cluster_centers_ = self._data[dot]
             elif self._method == "++": # kmeans++ is initiated
-                #print("++")
+                
                 dot = np.random.choice(len(self._data), replace=False) # random startpunkt
                 clusters = np.array([self._data[dot]])
                 
@@ -83,7 +92,7 @@ class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):               # Inp
                 
         return self
    
-    
+    """predicts for a given dataset the labels"""
     def predict(self, X):
         clusters = np.expand_dims(self.cluster_centers_, axis=1)
         data = np.expand_dims(X, axis=0)
@@ -91,6 +100,7 @@ class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):               # Inp
         self.labels_ = np.argmin(eucl, axis = 0)
         return self.labels_ #returns the cluster with minimum distance
     
+    """creates a matrix with center-point distance for each point"""
     def transform(self, X):
         clusters = np.expand_dims(self.cluster_centers_, axis=1)
         data = np.expand_dims(X, axis=0)
@@ -108,6 +118,7 @@ class MiniBatchKMeans(BaseEstimator, ClusterMixin, TransformerMixin):
             max_iterations (int): maximum number of iterations to perform.
             tol (float): tolerance for early stopping.
             batch_size (int): number of datapoints for the minibatch.
+            method (str): method of choosing starting centers "++" or "rng"
         """
         self.labels_ = None
         self.cluster_centers_ = None
