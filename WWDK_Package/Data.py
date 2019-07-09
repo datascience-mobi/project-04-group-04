@@ -12,6 +12,12 @@ import tarfile
 import csv
 from numba import njit, jit
 from sklearn.base import BaseEstimator, ClusterMixin, TransformerMixin
+from sklearn.decomposition import PCA
+from sklearn import preprocessing
+from sklearn.cluster import KMeans
+from sklearn.manifold import TSNE
+import umap
+from sklearn.datasets import load_digits
 
 class Loader(): # Input:dData, Output: processed dataset ready for kmeans
     
@@ -23,7 +29,7 @@ class Loader(): # Input:dData, Output: processed dataset ready for kmeans
         self.data = self.page
 
     
-    def process(self, method="tsne", pca = True): # Data preprocessing
+     def process(self, method="tsne"): # Data preprocessing
         self.matrix.var_names_make_unique()
         ar_data = self.matrix.to_df()
         columns = []
@@ -31,29 +37,28 @@ class Loader(): # Input:dData, Output: processed dataset ready for kmeans
             reader = csv.reader(file, delimiter='\t')
             for row in reader:
                 columns.append(row[1])
+        columns = np.array(columns)
         rows = []
         with open(self.source + "barcodes.tsv") as file:
             reader = csv.reader(file, delimiter='\t')
             for row in reader:
                 rows.append(row[0]) 
+        rows = np.array(rows)        
 
-        return ar_data, columns, rows
-
-    def _pca(self): # Principal component analysis
-        #scaled = preprocessing.scale(self._data)
+        data_nonzero_variance = ar_data[columns[ar_data.var() != 0]]  
+        normalized_data = preprocessing.normalize(data_nonzero_variance)
+        scaled_data = preprocessing.scale(normalized_data)
         pca = PCA()
-        return pca.fit_transform(self.data)
-        #per_var = np.round(pca.explained_variance_ratio_*100, decimals= 1)
-        #pca_data = pca.transform(self-_data)
-        #labels = ["PC" + str(x) for x in range(1,len(per_var)+1)]
-     #t-distributed stochastic neighbor embedding
-    
-    def to_matrix(self):                                # converts to scanpy matrix 
-        return self.matrix
+        pca_data = pca.fit_transform(scaled_data)
 
-    def _to_df(self):                                 # converts data to pandas dataframe
-        self.data = self.matrix.to_df()
+        if method == "tsne":
+            tsned = TSNE()
+            processed_data = tsned.fit_transform(pca_data)
+        elif method == "umap":
+            umaped = umap.UMAP()
+            processed_data = umaped.fit_transform(pca_data)
+        else:
+            print("No valid method!")
 
-        return self.data
-        
+        return processed_data, ar_data, columns, rows
    
