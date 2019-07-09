@@ -80,17 +80,16 @@ def time_init_plot(data, iterations, runs):
     plt.ylabel("time[s]")
     return plt.show()
 
-def elbow_plot(data, iterations):
-    liste = []
-    for i in range(iterations):
-        lib = cl.Kmeans(inits=10, method="rng", k=i+1)
-        lib.fit(data)
-        liste.append(lib.inertia_)
-        #print(lib.inertia_)
-    plt.plot(liste, "kx")
-    plt.plot(liste)
+def elbow_plot(data, max_k):
+    Sum_of_squared_distances = []
+    for i in range(max_k):
+        km = cl.Kmeans(inits=10, method="rng", k=i+1)
+        km.fit(data)
+        Sum_of_squared_distances.append(km.inertia_)
+    plt.plot(Sum_of_squared_distances, "kx")
+    plt.plot(Sum_of_squared_distances)
     plt.xlabel("k")
-    plt.ylabel("score")
+    plt.ylabel("Sum of squared distances")
     return plt.show()
 
 def plot(data):
