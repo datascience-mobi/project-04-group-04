@@ -29,7 +29,7 @@ class Loader(): # Input:dData, Output: processed dataset ready for kmeans
         self.data = self.page
 
     
-     def process(self, method="tsne"): # Data preprocessing
+    def process(self, method="tsne"):  # Data preprocessing
         self.matrix.var_names_make_unique()
         ar_data = self.matrix.to_df()
         columns = []
