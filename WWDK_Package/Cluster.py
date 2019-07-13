@@ -77,13 +77,14 @@ class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):
                 self.labels_ = np.argmin(eucl, axis = 0)
                 for i in range(self._k): # range of clusters
                     position = np.where(self.labels_ == i) # position im array bestimmen und dann die entspechenden punkte aus data auslesen
-                    if np.any(np.isnan(self._data[position].mean(axis=0)) == True):
+                    
+                    if np.any(self.labels_ == i) == False:
                         self.cluster_centers_[i] = self._data[np.random.choice(self._data.shape[0], 1, replace=False)]
                         
                     else:
                         self.cluster_centers_[i] = self._data[position].mean(axis=0)
                     #out = pd.DataFrame(data[np.argwhere(dist == i)].squeeze())
-                overall_quality = np.sum(np.min(eucl.T, axis=1))
+                overall_quality = np.sum(np.min(eucl.T**2, axis=1))
                 if overall_quality < best_clust:
                     best_clust = overall_quality
                     best_dist = self.labels_
