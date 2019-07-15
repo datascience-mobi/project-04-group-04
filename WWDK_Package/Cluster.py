@@ -45,24 +45,19 @@ class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):
                 self.cluster_centers_ = self._data[dot]
             elif self._method == "++": # kmeans++ is initiated
                 
+                clusters = np.zeros((self._k,2))
                 dot = np.random.choice(len(self._data), replace=False) # random startpunkt
-                clusters = np.array([self._data[dot]])
-                
+                clusters[0] = self._data[dot]
+                            
                 for i in range (self._k-1):
-                    D = np.array([])
-            
+                    D = np.zeros((len(self._data)))
+                        
                     for j in range (len(self._data)):
-                        D = np.append(D,np.min(np.sum((self._data[j]-clusters)**2, axis = 1)))
-                
-                     
-            
-                    p = D/np.sum(D)
-                    cummulative_p = np.cumsum(p)
-            
-                    r = random.random()
-                    ind = np.where(cummulative_p >= r)[0][0]
-            
-                    clusters = np.append(clusters,[self._data[ind]], axis = 0)
+                        D[j] = np.min(np.sum((self._data[j]-clusters[0:i+1])**2, axis = 1))
+                        
+                    r = np.random.random()
+                    ind = np.argwhere(np.cumsum(D/np.sum(D)) >= r)[0][0]
+                    clusters[i+1] = self._data[ind]
                 self.cluster_centers_ = clusters
             else:
                 raise AttributeError("No valid method")
@@ -149,22 +144,19 @@ class MiniBatchKMeans(BaseEstimator, ClusterMixin, TransformerMixin):
             return data[indices], np.zeros(self._k)
 
         elif self._method == "++":
-            dot = np.random.choice(range(len(data)), replace=False) # random startpunkt
-            clusters = np.array([data[dot]])
-                
+            clusters = np.zeros((self._k,2))
+            dot = np.random.choice(len(data), replace=False) # random startpunkt
+            clusters[0] = data[dot]
+                            
             for i in range (self._k-1):
-                D = np.array([])
-            
-                for j in range(len(data)):
-                    D = np.append(D,np.min(np.sum((data[j]-clusters)**2, axis = 1)))
-         
-                p = D/np.sum(D)
-                cummulative_p = np.cumsum(p)
-            
-                r = random.random()
-                ind = np.where(cummulative_p >= r)[0][0]
-            
-                clusters = np.append(clusters,[data[ind]], axis = 0)
+                D = np.zeros((len(data)))
+                        
+                for j in range (len(data)):
+                    D[j] = np.min(np.sum((data[j]-clusters[0:i+1])**2, axis = 1))
+                        
+                r = np.random.random()
+                ind = np.argwhere(np.cumsum(D/np.sum(D)) >= r)[0][0]
+                clusters[i+1] = data[ind]
             self.cluster_centers_ = clusters
             return clusters, np.zeros(self._k)
 
