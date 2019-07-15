@@ -48,13 +48,11 @@ class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):
                 clusters = np.zeros((self._k,2))
                 dot = np.random.choice(len(self._data), replace=False) # random startpunkt
                 clusters[0] = self._data[dot]
-                            
+                exp_clusters = np.expand_dims(clusters, axis=1)
+                exp_data = np.expand_dims(self._data, axis=0)
                 for i in range (self._k-1):
-                    D = np.zeros((len(self._data)))
-                        
-                    for j in range (len(self._data)):
-                        D[j] = np.min(np.sum((self._data[j]-clusters[0:i+1])**2, axis = 1))
-                        
+                    
+                    D = np.min(np.sum(np.square(exp_clusters[0:i+1]-exp_data),axis=2),axis=0)
                     r = np.random.random()
                     ind = np.argwhere(np.cumsum(D/np.sum(D)) >= r)[0][0]
                     clusters[i+1] = self._data[ind]
@@ -147,13 +145,11 @@ class MiniBatchKMeans(BaseEstimator, ClusterMixin, TransformerMixin):
             clusters = np.zeros((self._k,2))
             dot = np.random.choice(len(data), replace=False) # random startpunkt
             clusters[0] = data[dot]
-                            
+            exp_clusters = np.expand_dims(clusters, axis=1)
+            exp_data = np.expand_dims(data, axis=0)
             for i in range (self._k-1):
-                D = np.zeros((len(data)))
-                        
-                for j in range (len(data)):
-                    D[j] = np.min(np.sum((data[j]-clusters[0:i+1])**2, axis = 1))
-                        
+                    
+                D = np.min(np.sum(np.square(exp_clusters[0:i+1]-exp_data),axis=2),axis=0)
                 r = np.random.random()
                 ind = np.argwhere(np.cumsum(D/np.sum(D)) >= r)[0][0]
                 clusters[i+1] = data[ind]
