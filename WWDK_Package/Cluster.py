@@ -134,32 +134,30 @@ class MiniBatchKMeans(BaseEstimator, ClusterMixin, TransformerMixin):
         self._batch_size = batch_size
         self._method = method
         
-        
     def create_batch(self, data): 
+        self._data = data
         data_batch = np.random.choice(range(len(data)), self._batch_size, replace=False)
-        return data[data_batch]
-    
+        return data[data_batch]        
         """chooses x (x = batch_size) random points from the data to create the data batch
-        """        
+        """
         
     def initialize(self, data):
+        
+        
         if self._method == "rng":
             indices = np.random.choice(range(len(data)), self._k, replace=False)
             return data[indices], np.zeros(self._k)
-        
-        """chooses k random data points from data, to set centers for clustering
-        """
-        
+
         elif self._method == "++":
-            dot = np.random.choice(len(data), replace=False) # random startpunkt
+            dot = np.random.choice(range(len(data)), replace=False) # random startpunkt
             clusters = np.array([data[dot]])
                 
             for i in range (self._k-1):
                 D = np.array([])
             
-                for j in range (len(data)):
+                for j in range(len(data)):
                     D = np.append(D,np.min(np.sum((data[j]-clusters)**2, axis = 1)))
-            
+         
                 p = D/np.sum(D)
                 cummulative_p = np.cumsum(p)
             
@@ -167,10 +165,12 @@ class MiniBatchKMeans(BaseEstimator, ClusterMixin, TransformerMixin):
                 ind = np.where(cummulative_p >= r)[0][0]
             
                 clusters = np.append(clusters,[data[ind]], axis = 0)
+            self.cluster_centers_ = clusters
             return clusters, np.zeros(self._k)
-            
-        """uses k++ method for intalization
-        """
+
+        else:
+            raise AttributeError("No valid method")
+        """chooses k random data points from data, to set centers for clustering"""
     
     def expectation(self, data, centroids): 
         centroids = np.expand_dims(centroids, axis=1)
