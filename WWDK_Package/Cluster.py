@@ -134,14 +134,25 @@ class MiniBatchKMeans(BaseEstimator, ClusterMixin, TransformerMixin):
         self._batch_size = batch_size
         self._method = method
         
+        
     def create_batch(self, data): 
+        data_batch = np.random.choice(range(len(data)), self._batch_size, replace=False)
+        return data[data_batch]
+    
+        """chooses x (x = batch_size) random points from the data to create the data batch
+        """        
+        
+    def initialize(self, data):
         if self._method == "rng":
-
-            data_batch = np.random.choice(range(len(data)), self._batch_size, replace=False)
-            return data[data_batch]
+            indices = np.random.choice(range(len(data)), self._k, replace=False)
+            return data[indices], np.zeros(self._k)
+        
+        """chooses k random data points from data, to set centers for clustering
+        """
+        
         elif self._method == "++":
-            batch = np.random.choice(len(data), replace=False) # random startpunkt
-            clusters = np.array([data[batch]])
+            dot = np.random.choice(len(data), replace=False) # random startpunkt
+            clusters = np.array([data[dot]])
                 
             for i in range (self._k-1):
                 D = np.array([])
@@ -156,16 +167,9 @@ class MiniBatchKMeans(BaseEstimator, ClusterMixin, TransformerMixin):
                 ind = np.where(cummulative_p >= r)[0][0]
             
                 clusters = np.append(clusters,[data[ind]], axis = 0)
-            return clusters
-        
-        """chooses x (x = batch_size) random points from the data to create the data batch
-        """
-        
-    def initialize(self, data): 
-        indices = np.random.choice(range(len(data)), self._k, replace=False)
-        return data[indices], np.zeros(self._k)
-        
-        """chooses k random data points from data, to set centers for clustering
+            return clusters, np.zeros(self._k)
+            
+        """uses k++ method for intalization
         """
     
     def expectation(self, data, centroids): 
