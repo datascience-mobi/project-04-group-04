@@ -2,6 +2,7 @@ import sklearn.cluster as sk
 from WWDK_Package import Data as d
 from WWDK_Package import Cluster as cl
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import numpy as np
 import scanpy as sc
 import pandas as pd
@@ -75,7 +76,7 @@ def time_k_Plot(data, iterations, runs):
     plt.legend()
     return plt.show()
 
-def time_k_plot(data, iterations, runs):
+def time_k_plot(data, iterations, runs): #ohne wwdk_++
     liste = [0]
     #listeplus = [0]
     sklearn_liste = [0]
@@ -142,7 +143,7 @@ def time_k_plot(data, iterations, runs):
     plt.legend()
     return plt.show()
 
-def time_k_plot_mb(data, iterations, runs):
+def time_k_plot_mb(data, iterations, runs):  
     liste = [0]
     listeplus = [0]
     sklearn_liste = [0]
@@ -158,31 +159,25 @@ def time_k_plot_mb(data, iterations, runs):
             
             
             start = time.time()
-            lib = cl.MiniBatchKMeans(inits=10, method="rng", k=i+1)
+            lib = cl.MiniBatchKMeans(method="rng", k=i+1)
             lib.fit(data)
             end = time.time()
             meantime.append(end-start)
             
             start = time.time()
-            lib = cl.MiniBatchKMeans(inits=10, k=i+1)
+            lib = cl.MiniBatchKMeans(k=i+1)
             lib.fit(data)
             end = time.time()
-            #meantimeplus.append(end-start)
-            '''
-            inet_meantime =[]
+            meantimeplus.append(end-start)
+      
             start = time.time()
-            k_means(data,i+1,300)
-            end = time.time()
-            inet_meantime.append(end-start)
-            '''
-            start = time.time()
-            lib = sk.MiniBatchKMeans(init="random", n_init=10, n_clusters=i+1)
+            lib = sk.MiniBatchKMeans(init="random", n_clusters=i+1)
             lib.fit(data)
             end = time.time()
             sk_meantime.append(end-start)
             
             start = time.time()
-            lib = sk.MiniBatchKMeans(n_init=10, n_clusters=i+1)
+            lib = sk.MiniBatchKMeans(n_clusters=i+1)
             lib.fit(data)
             end = time.time()
             sk_meantimeplus.append(end-start)
@@ -202,6 +197,67 @@ def time_k_plot_mb(data, iterations, runs):
     plt.plot(listeplus, "kx")
     plt.plot(sklearn_listeplus, "r", label='sk_mb_++', linestyle='dashed')
     plt.plot(sklearn_listeplus, "kx")
+    #plt.plot(inet_liste, "g")
+    #plt.plot(inet_liste, "kx")
+    plt.xlabel("k")
+    plt.ylabel("time[s]")
+    plt.legend()
+    return plt.show()
+
+def time_k_wwdk_compare (data, iterations, runs, batchsize=100): #compare our vanilla, ++ and mb 
+    liste = [0]
+    listeplus = [0]
+    listemb = [0]
+    listembplus = [0]
+    #inet_liste = []
+    for i in range(iterations):
+        meantime = []
+        meantimemb = []
+        meantimeplus = []
+        meantimembplus = []
+        
+        for j in range(runs):
+            
+            
+            start = time.time()
+            lib = cl.Kmeans(method="rng", k=i+1)
+            lib.fit(data)
+            end = time.time()
+            meantime.append(end-start)
+            
+            start = time.time()
+            lib = cl.Kmeans(k=i+1)
+            lib.fit(data)
+            end = time.time()
+            meantimeplus.append(end-start)
+            
+            start = time.time()
+            lib = cl.MiniBatchKMeans(method="rng", k=i+1, batch_size=batchsize)
+            lib.fit(data)
+            end = time.time()
+            meantimemb.append(end-start)
+            
+            start = time.time()
+            lib = cl.MiniBatchKMeans(k=i+1, batch_size=batchsize)
+            lib.fit(data)
+            end = time.time()
+            meantimembplus.append(end-start)
+            
+        liste.append(np.mean(meantime))
+        listeplus.append(np.mean(meantimeplus))
+        listemb.append(np.mean(meantimemb))
+        listembplus.append(np.mean(meantimembplus))
+        #inet_liste.append(np.mean(inet_meantime))
+     
+    #print(lib.inertia_)
+    plt.plot(liste, label='WWDK')
+    plt.plot(liste, "kx")
+    plt.plot(listeplus, label='WWDK_++', linestyle='dashed')
+    plt.plot(listeplus, "kx")
+    plt.plot(listemb, label='WWDK_mb')
+    plt.plot(listemb, "kx")
+    plt.plot(listembplus, label='WWDK_mb_++', linestyle='dashed')
+    plt.plot(listembplus, "kx")
     #plt.plot(inet_liste, "g")
     #plt.plot(inet_liste, "kx")
     plt.xlabel("k")
@@ -315,7 +371,7 @@ def time_init_Plot(data, iterations, runs):
     plt.legend()
     return plt.show()
 
-def time_init_plot(data, iterations, runs):
+def time_init_plot(data, iterations, runs): #ohne wwdk_++
     liste = [0]
     sklearn_liste = [0]
     #listeplus = [0]
@@ -375,7 +431,7 @@ def time_init_plot(data, iterations, runs):
 
 def elbow_plot(data, max_k):
     Sum_of_squared_distances = []
-    for i in range(max_k):
+    for i in range(max_k+1):
         km = cl.Kmeans(inits=10, method="rng", k=i+1)
         km.fit(data)
         Sum_of_squared_distances.append(km.inertia_)
@@ -399,15 +455,16 @@ def plot(data, k):
             )
     return plt.show()
 
-def plot_Compare(data, dist, clusters,k):
+def plot_Compare(data, dist, clusters,k, title="title"):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     for i in range(k):
         graph = pd.DataFrame(data[np.argwhere(dist == i)].squeeze())
         center = pd.DataFrame(clusters[i]).T
-        #print("Cluster"+ str(i) +  " -- Assigned Points \n" + str(graph))
         ax.plot(graph[0], graph[1], "o")
         ax.plot(center[0],center[1], "kx")
         ax.annotate("Cluster " + str(i), xy = (center[0],center[1])
-            )   
+            )
+        black_patch = mpatches.Patch(color='k', label=title) 
+        plt.legend(handles=[black_patch])
     return plt.show()
