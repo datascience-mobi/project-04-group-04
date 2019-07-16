@@ -1,3 +1,4 @@
+"""contains utility functions, that are used for comparison of the package against sklearn. Also some function to visualize kmeans"""
 import sklearn.cluster as sk
 from WWDK_Package import Data as d
 from WWDK_Package import Cluster as cl
@@ -386,10 +387,10 @@ def elbow_plot(data, max_k):
     return plt.show()
 
 
-def plot(data, k):
+def plot(data):
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    for i in range(k):
+    for i in range(data._k):
         graph = pd.DataFrame(data._data[np.argwhere(data.labels_ == i)].squeeze())
         center = pd.DataFrame(data.cluster_centers_[i]).T
         #print("Cluster"+ str(i) +  " -- Assigned Points \n" + str(graph))

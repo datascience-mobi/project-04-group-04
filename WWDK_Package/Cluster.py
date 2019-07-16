@@ -1,3 +1,4 @@
+'''Cluster contains all of the different cluster methods.'''
 import random
 import math
 import matplotlib.pyplot as plt
@@ -46,47 +47,47 @@ class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):
             elif self._method == "++": # kmeans++ is initiated
                 
                 clusters = np.zeros((self._k,2))
-                dot = np.random.choice(len(self._data), replace=False) # random startpunkt
+                dot = np.random.choice(len(self._data), replace=False) # one random center
                 clusters[0] = self._data[dot]
                 exp_clusters = np.expand_dims(clusters, axis=1)
-                exp_data = np.expand_dims(self._data, axis=0)
-                for i in range (self._k-1):
+                exp_data = np.expand_dims(self._data, axis=0) # clusters and data are expanded to be easily substracted in a next step
+                for i in range (self._k-1): #the rest of the centers are chosen based on the first one
                     
                     D = np.min(np.sum(np.square(exp_clusters[0:i+1]-exp_data),axis=2),axis=0)
                     r = np.random.random()
-                    ind = np.argwhere(np.cumsum(D/np.sum(D)) >= r)[0][0]
+                    ind = np.argwhere(np.cumsum(D/np.sum(D)) >= r)[0][0] # the point when the cummulative sum is equal to r is choosen as ind
                     clusters[i+1] = self._data[ind]
                 self.cluster_centers_ = clusters
             else:
-                raise AttributeError("No valid method")
+                raise AttributeError("No valid method") # if a non existing method is choosen, a error is raised
 
             old_centroids = None
 
             for i in range(self._maxit):
-                old_centroids = self.cluster_centers_.copy()
+                old_centroids = self.cluster_centers_.copy() # the cluster centers are copied for tolerance later on.
                 clusters = np.expand_dims(self.cluster_centers_, axis=1)
                 data = np.expand_dims(self._data, axis=0)
                 eucl = np.linalg.norm(clusters-data, axis=2) # euclidean dist by using integrated numpy function
                 self.labels_ = np.argmin(eucl, axis = 0)
                 for i in range(self._k): # range of clusters
-                    position = np.where(self.labels_ == i) # position im array bestimmen und dann die entspechenden punkte aus data auslesen
+                    position = np.where(self.labels_ == i) # position of points assosiated with cluster i are calculated
                     
                     if np.any(self.labels_ == i) == False:
-                        self.cluster_centers_[i] = self._data[np.random.choice(self._data.shape[0], 1, replace=False)]
+                        self.cluster_centers_[i] = self._data[np.random.choice(self._data.shape[0], 1, replace=False)] # in rare events it can happen that no points are assigned to a cluster. if that happens centroid is newly choosen
                         
                     else:
                         self.cluster_centers_[i] = self._data[position].mean(axis=0)
                     #out = pd.DataFrame(data[np.argwhere(dist == i)].squeeze())
-                overall_quality = np.sum(np.min(eucl.T**2, axis=1))
+                overall_quality = np.sum(np.min(eucl.T**2, axis=1)) #quality of the clustering based on the inner cluster distances
                 if overall_quality < best_clust:
                     best_clust = overall_quality
                     best_dist = self.labels_
                     best_centers = self.cluster_centers_
-                if np.linalg.norm(self.cluster_centers_ - old_centroids) < self._tol:
+                if np.linalg.norm(self.cluster_centers_ - old_centroids) < self._tol: #if the tolerance is reached the algorithm is stopped. this enables faster running times
                     break
-            self.cluster_centers_ = best_centers
-            self.labels_ = best_dist
-            self.inertia_ = best_clust
+            self.cluster_centers_ = best_centers #final centers
+            self.labels_ = best_dist #final labels
+            self.inertia_ = best_clust # best quality reached in all attempts
                 
         return self
    
@@ -96,14 +97,14 @@ class Kmeans(BaseEstimator, ClusterMixin, TransformerMixin):
         data = np.expand_dims(X, axis=0)
         eucl = np.linalg.norm(clusters-data, axis=2) # euclidean dist by using integrated numpy function
         self.labels_ = np.argmin(eucl, axis = 0)
-        return self.labels_ #returns the cluster with minimum distance
+        return self.labels_ 
     
     """creates a matrix with center-point distance for each point"""
     def transform(self, X):
         clusters = np.expand_dims(self.cluster_centers_, axis=1)
         data = np.expand_dims(X, axis=0)
         eucl = np.linalg.norm(clusters-data, axis=2)
-        return eucl.T
+        return eucl.T 
 
 class MiniBatchKMeans(BaseEstimator, ClusterMixin, TransformerMixin):
     """Performs mini-batch k-means on a set of input data."""
@@ -131,8 +132,7 @@ class MiniBatchKMeans(BaseEstimator, ClusterMixin, TransformerMixin):
         self._data = data
         data_batch = np.random.choice(range(len(data)), self._batch_size, replace=False)
         return data[data_batch]        
-        """chooses x (x = batch_size) random points from the data to create the data batch
-        """
+        """chooses x (x = batch_size) random points from the data to create the data batch"""
         
     def initialize(self, data):
         
@@ -166,8 +166,7 @@ class MiniBatchKMeans(BaseEstimator, ClusterMixin, TransformerMixin):
         metric = np.linalg.norm(centroids - data, axis=2)
         return np.argmin(metric, axis=0)
         
-        """measures the euclidean distance between each data_batch points and center points using numpys linalg.norm function
-        """
+        """measures the euclidean distance between each data_batch points and center points using numpys linalg.norm function"""
     
     @staticmethod
     @numba.jit(nopython=True)
@@ -180,8 +179,7 @@ class MiniBatchKMeans(BaseEstimator, ClusterMixin, TransformerMixin):
             update[assignment] = update[assignment] * (1 - lr) + data_point * lr
         return update
     
-        """Moves the centroids to the new centroid point of the assigned data_batch points. But not completely, but according to the learning rate
-        """
+        """Moves the centroids to the new centroid point of the assigned data_batch points. But not completely, but according to the learning rate"""
     
     def maximization(self, data, assignments, centroids, centroid_count): 
         return MiniBatchKMeans._maximization_aux(data, assignments, centroids, centroid_count)
