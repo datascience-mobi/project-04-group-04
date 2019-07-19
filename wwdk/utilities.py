@@ -315,7 +315,7 @@ def elbow_plot(data, max_k):
         Sum_of_squared_distances.append(km.inertia_)
     plt.plot(Sum_of_squared_distances, "kx")
     plt.plot(Sum_of_squared_distances)
-    plt.xlabel("k")
+    plt.xlabel("k")s
     plt.ylabel("Sum of squared distances")
     return plt.show()
 
@@ -328,9 +328,9 @@ def plot(data):
         center = pd.DataFrame(data.cluster_centers_[i]).T
         #print("Cluster"+ str(i) +  " -- Assigned Points \n" + str(graph))
         ax.plot(graph[0], graph[1], "o", markersize=1)
-        ax.plot(center[0],center[1], "o", markersize=3.5)
+        ax.plot(center[0],center[1], "o", c="k", markersize=3.5)
         ax.annotate("  Cluster " + str(i), xy = (center[0],center[1])
-            )
+            )s
     return plt.show()
 
 def plot_seaborn(data, ks = 8, methods = "rng"):
