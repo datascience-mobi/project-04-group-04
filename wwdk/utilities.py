@@ -10,6 +10,7 @@ import scanpy as sc
 import pandas as pd
 import time
 import math
+import seaborn as sns 
 
 def time_k_plot(data, iterations, runs):
     liste = [0]
@@ -326,11 +327,25 @@ def plot(data):
         graph = pd.DataFrame(data._data[np.argwhere(data.labels_ == i)].squeeze())
         center = pd.DataFrame(data.cluster_centers_[i]).T
         #print("Cluster"+ str(i) +  " -- Assigned Points \n" + str(graph))
-        ax.plot(graph[0], graph[1], "o")
-        ax.plot(center[0],center[1], "kx")
-        ax.annotate("Cluster " + str(i), xy = (center[0],center[1])
+        ax.plot(graph[0], graph[1], "o", markersize=0.5)
+        ax.plot(center[0],center[1], "kx", markersize=3.5)
+        ax.annotate("  Cluster " + str(i), xy = (center[0],center[1])
             )
     return plt.show()
+
+def plot_seaborn(data, ks = 8, methods = "rng"):
+    
+    van_umap = cl.Kmeans(inits = 10, method = methods, k = ks).fit(data)
+    
+    y_van_umap = van_umap.predict(data)
+    
+    centers_van_umap = van_umap.cluster_centers_
+
+    sns.set_style("dark")
+    g = sns.scatterplot(x= data[:, 0], y= data[:, 1], hue= y_van_umap, s=10, palette="hot")
+    sns.scatterplot(x=centers_van_umap[:, 0], y=centers_van_umap[:, 1], s=50)
+    
+    plt.show()    
 
 def plot_compare(data, dist, clusters,k, title="title"):
     fig = plt.figure()
