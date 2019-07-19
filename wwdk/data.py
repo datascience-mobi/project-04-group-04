@@ -29,7 +29,7 @@ class Loader(): # Input:dData, Output: processed dataset ready for kmeans
         self.data = self.page
 
     
-    def process(self, method="tsne"):  # Data preprocessing
+    def process(self, method="umap"): #Data preprocessing
         self.matrix.var_names_make_unique()
         ar_data = self.matrix.to_df()
         columns = []
@@ -43,20 +43,25 @@ class Loader(): # Input:dData, Output: processed dataset ready for kmeans
             reader = csv.reader(file, delimiter='\t')
             for row in reader:
                 rows.append(row[0]) 
-        rows = np.array(rows)        
+        rows = np.array(rows)   
+        
+        ar_data_without_mt = ar_data[np.sum(ar_data[ar_data.columns[ar_data.columns.str.startswith("MT-") == True]],axis=1)/np.sum(ar_data,axis=1) <= 0.05]
+        # Those cells are deleted, which have a fraction of counts mito genes vs. all genes higher 5%. That is because: High proportions are indicative of poor-quality cells (Islam et al. 2014; Ilicic et al. 2016), possibly because of loss of cytoplasmic RNA from perforated cells. The reasoning is that mitochondria are larger than individual transcript molecules and less likely to escape through tears in the cell membrane.
+        ar_data_without_mt_bigger_three = ar_data_without_mt.T[(ar_data_without_mt.astype(bool).sum(axis=0) > 3)].T
+        # Those genes are deleted, which are expressed in less than three cells.
 
-        data_nonzero_variance = ar_data[columns[ar_data.var() != 0]]  
-        normalized_data = preprocessing.normalize(data_nonzero_variance)
-        scaled_data = preprocessing.scale(normalized_data)
-        pca = PCA()
-        pca_data = pca.fit_transform(scaled_data)
+        normalized_data = preprocessing.normalize(ar_data_without_mt_bigger_three)
+        
+        pca = PCA(n_components = 40)
+        pca_data = pca.fit_transform(normalized_data)
+        per_var = np.round(pca.explained_variance_ratio_*100, decimals=1)
+        labels = ["PC" + str(x) for x in range(1,len(per_var)+1)]
+        pca_df = pd.DataFrame(pca_data, columns= labels)
 
         if method == "tsne":
-            tsned = TSNE()
-            processed_data = tsned.fit_transform(pca_data)
+            processed_data = TSNE().fit_transform(pca_df)
         elif method == "umap":
-            umaped = umap.UMAP()
-            processed_data = umaped.fit_transform(pca_data)
+            processed_data = umap.UMAP(n_neighbors=10).fit_transform(pca_df)
         else:
             print("No valid method!")
 
