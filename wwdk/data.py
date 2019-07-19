@@ -46,7 +46,7 @@ class Loader(): # Input:dData, Output: processed dataset ready for kmeans
         rows = np.array(rows)   
         
         ar_data_without_mt = ar_data[np.sum(ar_data[ar_data.columns[ar_data.columns.str.startswith("MT-") == True]],axis=1)/np.sum(ar_data,axis=1) <= 0.05]
-        # Those cells are deleted, which have a fraction of counts mito genes vs. all genes higher 5%. That is because: High proportions are indicative of poor-quality cells (Islam et al. 2014; Ilicic et al. 2016), possibly because of loss of cytoplasmic RNA from perforated cells. The reasoning is that mitochondria are larger than individual transcript molecules and less likely to escape through tears in the cell membrane.
+        # Those cells are deleted, which have a fraction of counts mito genes vs. all genes higher 5%. 
         ar_data_without_mt_bigger_three = ar_data_without_mt.T[(ar_data_without_mt.astype(bool).sum(axis=0) > 3)].T
         # Those genes are deleted, which are expressed in less than three cells.
 
@@ -65,5 +65,5 @@ class Loader(): # Input:dData, Output: processed dataset ready for kmeans
         else:
             print("No valid method!")
 
-        return processed_data, ar_data, columns, rows
+        return processed_data, ar_data_without_mt_bigger_three, ar_data, columns, rows
    

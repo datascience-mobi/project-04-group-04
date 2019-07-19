@@ -327,8 +327,8 @@ def plot(data):
         graph = pd.DataFrame(data._data[np.argwhere(data.labels_ == i)].squeeze())
         center = pd.DataFrame(data.cluster_centers_[i]).T
         #print("Cluster"+ str(i) +  " -- Assigned Points \n" + str(graph))
-        ax.plot(graph[0], graph[1], "o", markersize=0.5)
-        ax.plot(center[0],center[1], "kx", markersize=3.5)
+        ax.plot(graph[0], graph[1], "o", markersize=1)
+        ax.plot(center[0],center[1], "o", markersize=3.5)
         ax.annotate("  Cluster " + str(i), xy = (center[0],center[1])
             )
     return plt.show()
