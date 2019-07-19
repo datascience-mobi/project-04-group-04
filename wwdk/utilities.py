@@ -373,50 +373,47 @@ class Gifcreator(BaseEstimator, ClusterMixin, TransformerMixin):
         self.labels_ = None
         self.cluster_centers_ = None
         self.inits = inits
-        self._k = k
-        self._maxit = maxit
-        self._method = method
-        self._tol = tol
+        self.k = k
+        self.maxit = maxit
+        self.method = method
+        self.tol = tol
        
     """fits given data and calculates cluster centers and labels points accordingly"""
 
     def create_gif(self,data):
         os.mkdir("./plots")
         filenames = []
-        self._data = data
+        self.data = data
         best_clust = float('inf')
         
-        
-        error = False
         for c in (range(self.inits)):
-            if error == True:
-                break
+            print("Init: " + str(c))
             """random points from the dataset are selected as starting centers """
-            if self._method == "rng": # random centers are choosen
+            if self.method == "rng": # random centers are choosen
                 
-                dot = np.random.choice(self._data.shape[0], self._k, replace=False)
-                self.cluster_centers_ = self._data[dot]
-            elif self._method == "++": # kmeans++ is initiated
-                clusters = np.zeros((self._k, self._data.shape[1]))
-                dot = np.random.choice(len(self._data), replace=False) # one random center
-                clusters[0] = self._data[dot]
+                dot = np.random.choice(self.data.shape[0], self.k, replace=False)
+                self.cluster_centers_ = self.data[dot]
+            elif self.method == "++": # kmeans++ is initiated
+                clusters = np.zeros((self.k, self.data.shape[1]))
+                dot = np.random.choice(len(self.data), replace=False) # one random center
+                clusters[0] = self.data[dot]
                 exp_clusters = np.expand_dims(clusters, axis=1)
-                exp_data = np.expand_dims(self._data, axis=0) # clusters and data are expanded to be easily substracted in a next step
-                for i in range (self._k - 1): #the rest of the centers are chosen based on the first one
+                exp_data = np.expand_dims(self.data, axis=0) # clusters and data are expanded to be easily substracted in a next step
+                for i in range (self.k - 1): #the rest of the centers are chosen based on the first one
                     D = np.min(np.sum(np.square(exp_clusters[0:i + 1] - exp_data), axis=2), axis=0)
                     r = np.random.random()
                     ind = np.argwhere(np.cumsum(D / np.sum(D)) >= r)[0][0] # the point when the cummulative sum is equal to r is choosen as ind
-                    clusters[i + 1] = self._data[ind]
+                    clusters[i + 1] = self.data[ind]
                 self.cluster_centers_ = clusters
             else:
                 raise AttributeError("No valid method")
 
             old_centroids = None
 
-            for i in range(self._maxit):
+            for i in range(self.maxit):
                 #plt.scatter(X[:, 0], X[:, 1],c="w", s=50)
-                for ie in range(self._k):
-                    graph = pd.DataFrame(self._data[np.argwhere(self.labels_ == ie)].squeeze())
+                for ie in range(self.k):
+                    graph = pd.DataFrame(self.data[np.argwhere(self.labels_ == ie)].squeeze())
                     center = pd.DataFrame(self.cluster_centers_[ie]).T
                     plt.plot(graph[0], graph[1], "o")
                     plt.plot(center[0],center[1], "kx")
@@ -429,7 +426,7 @@ class Gifcreator(BaseEstimator, ClusterMixin, TransformerMixin):
                 
                 old_centroids = self.cluster_centers_.copy()
                 clusters = np.expand_dims(self.cluster_centers_, axis=1)
-                data = np.expand_dims(self._data, axis=0)
+                data = np.expand_dims(self.data, axis=0)
                 eucl = np.linalg.norm(clusters-data, axis=2) # euclidean dist by using integrated numpy function
                 self.labels_ = np.argmin(eucl, axis=0)
                 
@@ -439,29 +436,28 @@ class Gifcreator(BaseEstimator, ClusterMixin, TransformerMixin):
                 #if i > 30:
                   #  error = True
                  #   break
-                for i in range(self._k): # range of clusters
-                    position = np.where(self.labels_ == i) # position im array bestimmen und dann die entspechenden punkte aus data auslesen
+                for i in range(self.k): # range of clusters
+                    position = np.where(self.labels_ == i)
+                    # Position of points assosiated with cluster i are calculated.
                     
-                        
-                        
-                    try:
-                        self.cluster_centers_[i] = self._data[position].mean(axis=0)
-                    except RuntimeWarning:
-                        self.cluster_centers_[i] = self._data[np.random.choice(self._data.shape[0], 1, replace=False)]
-                        print("Error")
+                    if np.any(self.labels_ == i) == False:
+                        self.cluster_centers_[i] = self.data[np.random.choice(self.data.shape[0], 1, replace=False)]
+                        # In rare events it can happen that no points are assigned to a cluster. 
+                        # If that happens centroid is newly choosen
+                    else:
+                        self.cluster_centers_[i] = self.data[position].mean(axis=0)
                     #out = pd.DataFrame(data[np.argwhere(dist == i)].squeeze())
                 overall_quality = np.sum(np.min(eucl.T, axis=1))
                 if overall_quality < best_clust:
                     best_clust = overall_quality
                     best_dist = self.labels_
                     best_centers = self.cluster_centers_
-                if np.linalg.norm(self.cluster_centers_ - old_centroids) < self._tol:
+                if np.linalg.norm(self.cluster_centers_ - old_centroids) < self.tol:
                     break
             self.cluster_centers_ = best_centers
             self.labels_ = best_dist
             self.inertia_ = best_clust
-            images = []
-            
+        images = []
         for filename in filenames:
             images.append(imageio.imread(filename))
             imageio.mimsave('./kmeans.gif', images)
