@@ -11,6 +11,10 @@ import pandas as pd
 import time
 import math
 import seaborn as sns 
+import imageio
+import shutil
+import os
+from sklearn.base import BaseEstimator, ClusterMixin, TransformerMixin
 
 def time_k_plot(data, iterations, runs):
     liste = [0]
@@ -315,7 +319,7 @@ def elbow_plot(data, max_k):
         Sum_of_squared_distances.append(km.inertia_)
     plt.plot(Sum_of_squared_distances, "kx")
     plt.plot(Sum_of_squared_distances)
-    plt.xlabel("k")s
+    plt.xlabel("k")
     plt.ylabel("Sum of squared distances")
     return plt.show()
 
@@ -329,8 +333,8 @@ def plot(data):
         #print("Cluster"+ str(i) +  " -- Assigned Points \n" + str(graph))
         ax.plot(graph[0], graph[1], "o", markersize=1)
         ax.plot(center[0],center[1], "o", c="k", markersize=3.5)
-        ax.annotate("  Cluster " + str(i), xy = (center[0],center[1])
-            )s
+        ax.annotate("  Cluster " + str(i), xy = (center[0],center[1]))
+            
     return plt.show()
 
 def plot_seaborn(data, ks = 8, methods = "rng"):
@@ -360,3 +364,110 @@ def plot_compare(data, dist, clusters,k, title="title"):
         black_patch = mpatches.Patch(color='k', label=title) 
         plt.legend(handles=[black_patch])
     return plt.show()
+
+
+class Gifcreator(BaseEstimator, ClusterMixin, TransformerMixin):               
+    """Performs native k-means on a set of input data """
+    def __init__(self, inits=10, k=8, maxit=300, method="++", tol = 1e-3):
+ 
+        self.labels_ = None
+        self.cluster_centers_ = None
+        self.inits = inits
+        self._k = k
+        self._maxit = maxit
+        self._method = method
+        self._tol = tol
+       
+    """fits given data and calculates cluster centers and labels points accordingly"""
+
+    def create_gif(self,data):
+        os.mkdir("./plots")
+        filenames = []
+        self._data = data
+        best_clust = float('inf')
+        
+        
+        error = False
+        for c in (range(self.inits)):
+            if error == True:
+                break
+            """random points from the dataset are selected as starting centers """
+            if self._method == "rng": # random centers are choosen
+                
+                dot = np.random.choice(self._data.shape[0], self._k, replace=False)
+                self.cluster_centers_ = self._data[dot]
+            elif self._method == "++": # kmeans++ is initiated
+                clusters = np.zeros((self._k, self._data.shape[1]))
+                dot = np.random.choice(len(self._data), replace=False) # one random center
+                clusters[0] = self._data[dot]
+                exp_clusters = np.expand_dims(clusters, axis=1)
+                exp_data = np.expand_dims(self._data, axis=0) # clusters and data are expanded to be easily substracted in a next step
+                for i in range (self._k - 1): #the rest of the centers are chosen based on the first one
+                    D = np.min(np.sum(np.square(exp_clusters[0:i + 1] - exp_data), axis=2), axis=0)
+                    r = np.random.random()
+                    ind = np.argwhere(np.cumsum(D / np.sum(D)) >= r)[0][0] # the point when the cummulative sum is equal to r is choosen as ind
+                    clusters[i + 1] = self._data[ind]
+                self.cluster_centers_ = clusters
+            else:
+                raise AttributeError("No valid method")
+
+            old_centroids = None
+
+            for i in range(self._maxit):
+                #plt.scatter(X[:, 0], X[:, 1],c="w", s=50)
+                for ie in range(self._k):
+                    graph = pd.DataFrame(self._data[np.argwhere(self.labels_ == ie)].squeeze())
+                    center = pd.DataFrame(self.cluster_centers_[ie]).T
+                    plt.plot(graph[0], graph[1], "o")
+                    plt.plot(center[0],center[1], "kx")
+               
+                #print(i)
+                plt.savefig("./plots/graph" +str(c+1)+"-"+ str(i+1)+ ".png")
+                filenames.append("./plots/graph" +str(c+1)+"-"+ str(i+1)+ ".png")
+                plt.clf()
+                
+                
+                old_centroids = self.cluster_centers_.copy()
+                clusters = np.expand_dims(self.cluster_centers_, axis=1)
+                data = np.expand_dims(self._data, axis=0)
+                eucl = np.linalg.norm(clusters-data, axis=2) # euclidean dist by using integrated numpy function
+                self.labels_ = np.argmin(eucl, axis=0)
+                
+               # print(i)
+                #print(self.cluster_centers_)
+                #print(self.labels_)
+                #if i > 30:
+                  #  error = True
+                 #   break
+                for i in range(self._k): # range of clusters
+                    position = np.where(self.labels_ == i) # position im array bestimmen und dann die entspechenden punkte aus data auslesen
+                    
+                        
+                        
+                    try:
+                        self.cluster_centers_[i] = self._data[position].mean(axis=0)
+                    except RuntimeWarning:
+                        self.cluster_centers_[i] = self._data[np.random.choice(self._data.shape[0], 1, replace=False)]
+                        print("Error")
+                    #out = pd.DataFrame(data[np.argwhere(dist == i)].squeeze())
+                overall_quality = np.sum(np.min(eucl.T, axis=1))
+                if overall_quality < best_clust:
+                    best_clust = overall_quality
+                    best_dist = self.labels_
+                    best_centers = self.cluster_centers_
+                if np.linalg.norm(self.cluster_centers_ - old_centroids) < self._tol:
+                    break
+            self.cluster_centers_ = best_centers
+            self.labels_ = best_dist
+            self.inertia_ = best_clust
+            images = []
+            
+        for filename in filenames:
+            images.append(imageio.imread(filename))
+            imageio.mimsave('./kmeans.gif', images)
+                
+        shutil.rmtree("./plots")
+        print("Gif created!")
+            
+        return self 
+
