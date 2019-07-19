@@ -1,7 +1,8 @@
-"""contains utility functions, that are used for comparison of the package against sklearn. Also some function to visualize kmeans"""
+"""contains utility functions, that are used for comparison
+of the package against sklearn. Also some function to visualize kmeans."""
 import sklearn.cluster as sk
-from WWDK_Package import Data as d
-from WWDK_Package import Cluster as cl
+from wwdk import data as d
+from wwdk import cluster as cl
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
@@ -10,7 +11,7 @@ import pandas as pd
 import time
 import math
 
-def time_k_Plot(data, iterations, runs):
+def time_k_plot(data, iterations, runs):
     liste = [0]
     listeplus = [0]
     sklearn_liste = [0]
@@ -68,73 +69,6 @@ def time_k_Plot(data, iterations, runs):
     plt.plot(sklearn_liste, "kx")
     plt.plot(listeplus, label='WWDK_++', linestyle='dashed')
     plt.plot(listeplus, "kx")
-    plt.plot(sklearn_listeplus, "r", label='sk_++', linestyle='dashed')
-    plt.plot(sklearn_listeplus, "kx")
-    #plt.plot(inet_liste, "g")
-    #plt.plot(inet_liste, "kx")
-    plt.xlabel("k")
-    plt.ylabel("time[s]")
-    plt.legend()
-    return plt.show()
-
-def time_k_plot(data, iterations, runs): #ohne wwdk_++
-    liste = [0]
-    #listeplus = [0]
-    sklearn_liste = [0]
-    sklearn_listeplus = [0]
-    #inet_liste = []
-    for i in range(iterations):
-        meantime = []
-        sk_meantime = []
-        #meantimeplus = []
-        sk_meantimeplus = []
-        
-        for j in range(runs):
-            
-            
-            start = time.time()
-            lib = cl.Kmeans(inits=10, method="rng", k=i+1)
-            lib.fit(data)
-            end = time.time()
-            meantime.append(end-start)
-            
-            #start = time.time()
-            #lib = cl.Kmeans(inits=10, k=i+1)
-            #lib.fit(data)
-            #end = time.time()
-            #meantimeplus.append(end-start)
-            '''
-            inet_meantime =[]
-            start = time.time()
-            k_means(data,i+1,300)
-            end = time.time()
-            inet_meantime.append(end-start)
-            '''
-            start = time.time()
-            lib = sk.KMeans(init="random", n_init=10, n_clusters=i+1)
-            lib.fit(data)
-            end = time.time()
-            sk_meantime.append(end-start)
-            
-            start = time.time()
-            lib = sk.KMeans(n_init=10, n_clusters=i+1)
-            lib.fit(data)
-            end = time.time()
-            sk_meantimeplus.append(end-start)
-            
-        liste.append(np.mean(meantime))
-        sklearn_liste.append(np.mean(sk_meantime))
-        #listeplus.append(np.mean(meantimeplus))
-        sklearn_listeplus.append(np.mean(sk_meantimeplus))
-        #inet_liste.append(np.mean(inet_meantime))
-     
-    #print(lib.inertia_)
-    plt.plot(liste, label='WWDK')
-    plt.plot(liste, "kx")
-    plt.plot(sklearn_liste, "r", label='sk')
-    plt.plot(sklearn_liste, "kx")
-    #plt.plot(listeplus, label='WWDK_++', linestyle='dashed')
-    #plt.plot(listeplus, "kx")
     plt.plot(sklearn_listeplus, "r", label='sk_++', linestyle='dashed')
     plt.plot(sklearn_listeplus, "kx")
     #plt.plot(inet_liste, "g")
@@ -314,7 +248,7 @@ def inertia_k_plot(data, iterations, runs):
     plt.legend()
     return plt.show()
 
-def time_init_Plot(data, iterations, runs):
+def time_init_plot(data, iterations, runs):
     liste = [0]
     sklearn_liste = [0]
     listeplus = [0]
@@ -372,64 +306,6 @@ def time_init_Plot(data, iterations, runs):
     plt.legend()
     return plt.show()
 
-def time_init_plot(data, iterations, runs): #ohne wwdk_++
-    liste = [0]
-    sklearn_liste = [0]
-    #listeplus = [0]
-    sklearn_listeplus = [0]
-    
-    for i in range(iterations):
-        meantime =[]
-        sk_meantime = []
-        #meantimeplus =[]
-        sk_meantimeplus = []
-        for j in range(runs):
-            
-            
-            start = time.time()
-            lib = cl.Kmeans(inits=i+1, method="rng", k=8)
-            lib.fit(data)
-            end = time.time()
-            meantime.append(end-start)
-            
-            #start = time.time()
-            #lib = cl.Kmeans(inits=i+1, k=8)
-            #lib.fit(data)
-            #end = time.time()
-            #meantimeplus.append(end-start)
-            
-            
-            start = time.time()
-            lib = sk.KMeans(init="random",n_clusters=8, n_init=i+1)
-            lib.fit(data)
-            end = time.time()
-            sk_meantime.append(end-start)
-            
-            start = time.time()
-            lib = sk.KMeans(n_clusters=8, n_init=i+1)
-            lib.fit(data)
-            end = time.time()
-            sk_meantimeplus.append(end-start)
-            
-        liste.append(np.mean(meantime))
-        sklearn_liste.append(np.mean(sk_meantime))
-        listeplus.append(np.mean(meantimeplus))
-        sklearn_listeplus.append(np.mean(sk_meantimeplus))
-     
-    #print(lib.inertia_)
-    plt.plot(liste, label='WWDK')
-    plt.plot(liste, "kx")
-    plt.plot(sklearn_liste, "r", label='sk')
-    plt.plot(sklearn_liste, "kx")
-    #plt.plot(listeplus, label='WWDK_++', linestyle='dashed')
-    #plt.plot(listeplus, "kx")
-    plt.plot(sklearn_listeplus, "r", label='sk_++', linestyle='dashed')
-    plt.plot(sklearn_listeplus, "kx")
-    plt.xlabel("inits")
-    plt.ylabel("time[s]")
-    plt.legend()
-    return plt.show()
-
 def elbow_plot(data, max_k):
     Sum_of_squared_distances = []
     for i in range(max_k+1):
@@ -456,7 +332,7 @@ def plot(data):
             )
     return plt.show()
 
-def plot_Compare(data, dist, clusters,k, title="title"):
+def plot_compare(data, dist, clusters,k, title="title"):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     for i in range(k):
