@@ -322,7 +322,7 @@ def elbow_plot(data, max_k):
 def plot(data):
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    for i in range(data._k):
+    for i in range(data.k):
         graph = pd.DataFrame(data._data[np.argwhere(data.labels_ == i)].squeeze())
         center = pd.DataFrame(data.cluster_centers_[i]).T
         #print("Cluster"+ str(i) +  " -- Assigned Points \n" + str(graph))
