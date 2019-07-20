@@ -206,10 +206,10 @@ def time_k_wwdk_compare (data, iterations, runs, batchsize=100): #compare our va
     return plt.show()
 
 def inertia_k_plot(data, iterations, runs):
-    inertia = [0]
-    sklearn_inertia = [0]
-    inertiaplus = [0]
-    sklearn_inertiaplus = [0]
+    inertia = [float("nan")]
+    sklearn_inertia = [float("nan")]
+    inertiaplus = [float("nan")]
+    sklearn_inertiaplus = [float("nan")]
     #inet_liste = []
     for i in range(iterations):
         meaninertia = []
@@ -312,8 +312,8 @@ def time_init_plot(data, iterations, runs):
     return plt.show()
 
 def elbow_plot(data, max_k):
-    Sum_of_squared_distances = []
-    for i in range(max_k+1):
+    Sum_of_squared_distances = [float("nan")]
+    for i in range(max_k):
         km = cl.Kmeans(inits=10, method="rng", k=i+1)
         km.fit(data)
         Sum_of_squared_distances.append(km.inertia_)
