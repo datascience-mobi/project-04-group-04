@@ -460,7 +460,7 @@ class Gifcreator(BaseEstimator, ClusterMixin, TransformerMixin):
         images = []
         for filename in filenames:
             images.append(imageio.imread(filename))
-            imageio.mimsave('./kmeans.gif', images)
+        imageio.mimsave('./kmeans.gif', images)
                 
         shutil.rmtree("./plots")
         print("Gif created!")
