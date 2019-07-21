@@ -446,7 +446,7 @@ class Gifcreator(BaseEstimator, ClusterMixin, TransformerMixin):
                         # If that happens centroid is newly choosen
                     else:
                         self.cluster_centers_[i] = self.data[position].mean(axis=0)
-                    #out = pd.DataFrame(data[np.argwhere(dist == i)].squeeze())
+                    
                 overall_quality = np.sum(np.min(eucl.T, axis=1))
                 if overall_quality < best_clust:
                     best_clust = overall_quality

@@ -184,12 +184,12 @@ class MiniBatchKMeans(BaseEstimator, ClusterMixin, TransformerMixin):
         Returns:
             An array with randomly selected batch from data.
         """
-        self._data = data
         data_batch = np.random.choice(range(len(data)), self.batch_size, replace=False)
         # Random data batch is choosen.
         return data[data_batch]
         
     def initialize(self, data):
+        self._data = data
         """chooses k random data points from data, to set centers for clustering.
         
         Args:
@@ -202,7 +202,7 @@ class MiniBatchKMeans(BaseEstimator, ClusterMixin, TransformerMixin):
             indices = np.random.choice(range(len(data)), self.k, replace=False)
             return data[indices], np.zeros(self.k)
         elif self.method == "++": # kmeans++ is initiated.
-            clusters = np.zeros((self.k, self._data.shape[1]))
+            clusters = np.zeros((self.k, data.shape[1]))
             dot = np.random.choice(len(data), replace=False) # one random center
             clusters[0] = data[dot]
             exp_clusters = np.expand_dims(clusters, axis=1)
