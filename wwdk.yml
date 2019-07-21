@@ -1,4 +1,4 @@
-name: test
+name: wwdk
 channels:
   - conda-forge
   - defaults
@@ -165,5 +165,5 @@ dependencies:
     - scanpy==1.4.1
     - tqdm==4.31.1
     - umap-learn==0.3.9
-prefix: /anaconda3/envs/test
+prefix: /anaconda3/envs/wwdk
 
